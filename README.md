@@ -5,7 +5,7 @@
 
 **相关方法**
 
- - openBlueTooth
+ - openBlueTooth  **打开设备蓝牙**
      - 参数 
          - success 成功回调
          - error 失败回调 
@@ -17,7 +17,7 @@
            rfid.openBlueTooth(success,error);
          ```
          
- - getBlueToothList
+ - getBlueToothList   **获取蓝牙列表，会自动调用openBlueTooth方法**
     - 参数 
          - success 成功回调
          - error 失败回调 
@@ -28,7 +28,7 @@
          ```
             rfid.getBlueToothList(success,error);
          ```
- - connectBlueTooth
+ - connectBlueTooth  **链接某蓝牙**
      - 参数 
          - success 成功回调
          - error 失败回调 
@@ -40,6 +40,14 @@
          ```
             rfid.connectBlueTooth(success,error,{address: address});
          ```
+  - window.sendDataToJs     
+  **注：这是一个js方法，用于plugin向js发送消息，通知更新蓝牙的链接状态**
+      - 返回值
+          -  {code : 0/1}  => 0 链接断开   1 链接正常
+      - 调用示例
+         ```
+            window.sendDataToJs = function (data) { }        
+         ```    
  - read
     - 参数 
          - success 成功回调

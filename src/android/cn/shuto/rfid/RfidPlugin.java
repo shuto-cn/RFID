@@ -56,6 +56,9 @@ public class RfidPlugin extends CordovaPlugin {
     //蓝牙设备列表
     private List<BluetoothDevice> mBlueToothList;
 
+    //判断设备是否已连接蓝牙
+    private Boolean isConnect = false;
+
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
@@ -97,58 +100,88 @@ public class RfidPlugin extends CordovaPlugin {
                 }
                 break;
             case CONNECT_BLUETOOTH:
-                JSONObject obj = args.getJSONObject(0);
-                String address = obj.getString("address");
-                if ("".equals(address)) {
-                    this.mCallbackContext.error("蓝牙地址为空");
+                if (isConnect) {
+                    mCallbackContext.success("模块打开成功");
                 } else {
-                    mAPI.onStart(address, new CallbackListener() {
-                        @Override
-                        public void callback(final boolean b, final String s) {
-                            cordova.getActivity().runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (b) {
-                                        mCallbackContext.success(s);
-                                    } else {
-                                        mCallbackContext.error(s);
+                    JSONObject obj = args.getJSONObject(0);
+                    String address = obj.getString("address");
+                    if ("".equals(address)) {
+                        this.mCallbackContext.error("蓝牙地址为空");
+                    } else {
+                        mAPI.onStart(address, new CallbackListener() {
+                            @Override
+                            public void callback(final boolean b, final String s) {
+                                cordova.getActivity().runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        isConnect = b;
+                                        //主动向页面发送消息
+                                        JSONObject obj = new JSONObject();
+                                        try {
+                                            if (b) {
+                                                obj.put("code", 1);
+                                            } else {
+                                                obj.put("code", 0);
+                                            }
+                                        } catch (JSONException e) {
+                                            e.printStackTrace();
+                                        }
+                                        webView.loadUrl("javascript:sendDataToJs(" + obj.toString() + ");");
+                                        //页面主动调用是返回值
+                                        if (b) {
+                                            mCallbackContext.success(s);
+                                        } else {
+                                            mCallbackContext.error(s);
+                                        }
                                     }
-                                }
-                            });
-                        }
-                    });
+                                });
+                            }
+                        });
+                    }
                 }
                 break;
             case READ:
-                if (mAPI != null) {
-                    mAPI.sendCmdOnReadTag();
+                if (!isConnect) {
+                    this.mCallbackContext.error("蓝牙设备已断开,请检测是否连接");
+                } else {
+                    if (mAPI != null) {
+                        mAPI.sendCmdOnReadTag();
+                    } else {
+                        this.mCallbackContext.error("插件初始化失败");
+                    }
                 }
                 break;
             case WRITE:
-                if (mAPI != null) {
-                    //获取客户端传来的epc值与编码方式。编码方式如果不传则默认0C
-                    JSONObject obj1 = args.getJSONObject(0);
-                    String number = obj1.getString("epc_number");
-                    String epclen = "0c";
-                    if (obj1.has("epc_len")) {
-                        epclen = obj1.getString("epc_len");
-                        if ("".equals(epclen)) {
-                            epclen = "0c";
+                if (!isConnect) {
+                    this.mCallbackContext.error("蓝牙设备已断开,请检测是否连接");
+                } else {
+                    if (mAPI != null) {
+                        //获取客户端传来的epc值与编码方式。编码方式如果不传则默认0C
+                        JSONObject obj1 = args.getJSONObject(0);
+                        String number = obj1.getString("epc_number");
+                        String epclen = "0c";
+                        if (obj1.has("epc_len")) {
+                            epclen = obj1.getString("epc_len");
+                            if ("".equals(epclen)) {
+                                epclen = "0c";
+                            }
                         }
-                    }
-                    int value;
-                    //将16进制0C转换为十进制数 12
-                    value = Integer.parseInt(epclen, 16);
-                    if (value % 2 != 0) {
-                        mCallbackContext.error("epclen输入字节长度不能为奇数");
-                    } else {
-                        if ("".equals(number)) {
-                            mCallbackContext.error("EPC值不能为空");
-                        } else if (value * 2 != number.length()) {
-                            mCallbackContext.error("输入内容长度与设置的字节长度不一致");
+                        int value;
+                        //将16进制0C转换为十进制数 12
+                        value = Integer.parseInt(epclen, 16);
+                        if (value % 2 != 0) {
+                            mCallbackContext.error("epclen输入字节长度不能为奇数");
                         } else {
-                            mAPI.sendCmdOnEditEPC(number);
+                            if ("".equals(number)) {
+                                mCallbackContext.error("EPC值不能为空");
+                            } else if (value * 2 != number.length()) {
+                                mCallbackContext.error("输入内容长度与设置的字节长度不一致");
+                            } else {
+                                mAPI.sendCmdOnEditEPC(number);
+                            }
                         }
+                    } else {
+                        this.mCallbackContext.error("插件初始化失败");
                     }
                 }
                 break;
@@ -169,7 +202,7 @@ public class RfidPlugin extends CordovaPlugin {
                             //读取成功的返回值
                             JSONObject obj = new JSONObject();
                             try {
-                                obj.put("message","读取成功");
+                                obj.put("message", "读取成功");
                                 obj.put("data", list);
                             } catch (JSONException e) {
                                 mCallbackContext.error(e.getMessage());
