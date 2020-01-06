@@ -1,7 +1,7 @@
 #### 乐亭项目RFID读取
 
 **安装方式**
-`cordova plugin add `
+`cordova plugin add https://github.com/shuto-cn/RFID.git`
 
 **相关方法**
 
