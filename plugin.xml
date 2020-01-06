@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin id="rfid" version="1.0.0" 
+    xmlns="http://apache.org/cordova/ns/plugins/1.0" 
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <name>rfid</name>
+    <js-module name="rfid" src="www/rfid.js">
+        <clobbers target="rfid" />
+    </js-module>
+    <platform name="android">
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="rfid">
+                <param name="android-package" value="cn.shuto.rfid.RfidPlugin"/>
+                <param name="onload" value="true" />
+            </feature>
+        </config-file>
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+            <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+            <uses-permission android:name="android.permission.BLUETOOTH" />
+            <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+            <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+            <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+        </config-file>
+        <!--lib-->
+        <source-file src="src/android/libs/SZForeRFID.jar" target-dir="libs"/>
+        <source-file src="src/android/libs/arm64-v8a/libszfore.so" target-dir="libs/arm64-v8a"/>
+        <source-file src="src/android/libs/armeabi/libszfore.so" target-dir="libs/armeabi"/>
+        <source-file src="src/android/libs/armeabi-v7a/libszfore.so" target-dir="libs/armeabi-v7a"/>
+        <source-file src="src/android/libs/mips/libszfore.so" target-dir="libs/mips"/>
+        <source-file src="src/android/libs/mips64/libszfore.so" target-dir="libs/mips64"/>
+        <source-file src="src/android/libs/x86/libszfore.so" target-dir="libs/x86"/>
+        <source-file src="src/android/libs/x86_64/libszfore.so" target-dir="libs/x86_64"/>
+        <!--src-->
+        <source-file src="src/android/cn/shuto/rfid/RfidPlugin.java" target-dir="src/cn/shuto/rfid"/>
+    </platform>
+</plugin>
