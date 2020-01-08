@@ -22,7 +22,8 @@
          - success 成功回调
          - error 失败回调 
      - 返回值
-         - success => { message: "", data:[ 蓝牙设备list ] }  
+         - success => { message: "", data:[
+                 {"name":"DYD0CZJ895NEL93","address":"3C:F8:62:13:29:B8"} ] }  
          - error => errorMsg
      - 调用示例
          ```

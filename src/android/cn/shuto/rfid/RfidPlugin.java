@@ -54,7 +54,9 @@ public class RfidPlugin extends CordovaPlugin {
     private static final String WRITE = "write";
 
     //蓝牙设备列表
-    private List<BluetoothDevice> mBlueToothList;
+    private JSONArray mBlueToothArray;
+    //搜索出的蓝牙设备列表，其中有重复的,去重
+    private List<String> mBlueToothAddressList;
 
     //判断设备是否已连接蓝牙
     private Boolean isConnect = false;
@@ -245,20 +247,20 @@ public class RfidPlugin extends CordovaPlugin {
      * 搜索蓝牙设备列表
      */
     private void doDiscovery() {
-        mBlueToothList = new ArrayList<>();
-        // 注册蓝牙开始搜索广播
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        this.cordova.getActivity().registerReceiver(mReceiver, filter);
+        if (!mBluetoothAdapter.isDiscovering()) {
+            // 注册蓝牙开始搜索广播
+            IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+            this.cordova.getActivity().registerReceiver(mReceiver, filter);
 
-        // 注册蓝牙搜索完毕广播
-        filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-        this.cordova.getActivity().registerReceiver(mReceiver, filter);
-        //如果正在搜索，关闭
-        if (mBluetoothAdapter.isDiscovering()) {
-            mBluetoothAdapter.cancelDiscovery();
+            // 注册蓝牙搜索完毕广播
+            filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+            this.cordova.getActivity().registerReceiver(mReceiver, filter);
+            mBlueToothArray = new JSONArray();
+            mBlueToothAddressList = new ArrayList<>();
+            //开始搜索
+            mBluetoothAdapter.startDiscovery();
         }
-        //开始搜索
-        mBluetoothAdapter.startDiscovery();
+
     }
 
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -268,12 +270,24 @@ public class RfidPlugin extends CordovaPlugin {
 
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                mBlueToothList.add(device);
+                if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
+                    if (mBlueToothAddressList.indexOf(device.getAddress()) == -1) {
+                        mBlueToothAddressList.add(device.getAddress());
+                        JSONObject object = new JSONObject();
+                        try {
+                            object.put("name", device.getName() == null ? "" : device.getName());
+                            object.put("address", device.getAddress());
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        mBlueToothArray.put(object);
+                    }
+                }
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 JSONObject obj = new JSONObject();
                 try {
                     obj.put("message", "蓝牙搜索完毕");
-                    obj.put("data", mBlueToothList);
+                    obj.put("data", mBlueToothArray);
                 } catch (JSONException e) {
                     mCallbackContext.error(e.getMessage());
                 }
