@@ -270,18 +270,16 @@ public class RfidPlugin extends CordovaPlugin {
 
             if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
-                    if (mBlueToothAddressList.indexOf(device.getAddress()) == -1) {
-                        mBlueToothAddressList.add(device.getAddress());
-                        JSONObject object = new JSONObject();
-                        try {
-                            object.put("name", device.getName() == null ? "" : device.getName());
-                            object.put("address", device.getAddress());
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                        mBlueToothArray.put(object);
+                if (mBlueToothAddressList.indexOf(device.getAddress()) == -1) {
+                    mBlueToothAddressList.add(device.getAddress());
+                    JSONObject object = new JSONObject();
+                    try {
+                        object.put("name", device.getName() == null ? "" : device.getName());
+                        object.put("address", device.getAddress());
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
+                    mBlueToothArray.put(object);
                 }
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 JSONObject obj = new JSONObject();
